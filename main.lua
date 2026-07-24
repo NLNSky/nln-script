@@ -54,47 +54,119 @@ ScreenGui:Destroy()
 task.wait(0.1)
 
 
+
 -- UI Panel by nln
-local UIState={ShowName=true,ShowHP=true,ShowDist=true,ESW=false,CL=false}
+local UIState={ShowName=true,ShowHP=true,ShowDist=true,ESW=false,CL=false,AIM=false,AimPart="Head",AimKey=Enum.KeyCode.Q,FOV=120,WALL=false}
 do
+local UIS=game:GetService("UserInputService")
+local RS=game:GetService("RunService")
+local Cam=workspace.CurrentCamera
+local Players=game:GetService("Players")
+local LP=Players.LocalPlayer
+
 local pg=Instance.new("ScreenGui")
-pg.Name="NLNPanel"
-pg.ResetOnSpawn=false
-pg.Parent=game:GetService("CoreGui")
+pg.Name="NLNPanel";pg.ResetOnSpawn=false;pg.Parent=game:GetService("CoreGui")
 local f=Instance.new("Frame",pg)
-f.Size=UDim2.new(0,170,0,160)
-f.Position=UDim2.new(0,40,0.4,0)
+f.Size=UDim2.new(0,170,0,315)
+f.Position=UDim2.new(0,40,0.32,0)
 f.BackgroundColor3=Color3.new(0,0,0)
 f.BorderColor3=Color3.fromRGB(170,0,255)
-local u=Instance.new("UICorner",f);u.CornerRadius=UDim.new(0,18)
+Instance.new("UICorner",f).CornerRadius=UDim.new(0,18)
 local t=Instance.new("TextLabel",f)
-t.Size=UDim2.new(1,0,0,22);t.BackgroundTransparency=1
-t.Text="by nln";t.TextColor3=Color3.fromRGB(170,0,255);t.Font=Enum.Font.GothamBold
-local items={{"Name","ShowName",30},{"HP","ShowHP",55},{"Dist","ShowDist",80},{"E-SW","ESW",105},{"CL","CL",130}}
+t.Size=UDim2.new(1,0,0,22);t.BackgroundTransparency=1;t.Text="by nln";t.TextColor3=Color3.fromRGB(170,0,255);t.Font=Enum.Font.GothamBold
+local items={{"Name","ShowName",30},{"HP","ShowHP",55},{"Dist","ShowDist",80},{"E-SW","ESW",105},{"CL","CL",130},{"AIM","AIM",155},{"WALL","WALL",180}}
 for _,it in ipairs(items) do
  local l=Instance.new("TextLabel",f);l.Position=UDim2.new(0,12,0,it[3]);l.Size=UDim2.new(0,70,0,20);l.BackgroundTransparency=1;l.Text=it[1];l.TextColor3=Color3.fromRGB(170,0,255)
  local b=Instance.new("TextButton",f);b.Position=UDim2.new(1,-34,0,it[3]);b.Size=UDim2.new(0,18,0,18);b.Text=""
- local c=Instance.new("UICorner",b);c.CornerRadius=UDim.new(1,0)
- local function upd() b.BackgroundColor3=UIState[it[2]] and Color3.fromRGB(170,0,255) or Color3.fromRGB(40,40,40) end
- upd();b.MouseButton1Click:Connect(function() UIState[it[2]]=not UIState[it[2]];upd() end)
+ Instance.new("UICorner",b).CornerRadius=UDim.new(1,0)
+ local function u() b.BackgroundColor3=UIState[it[2]] and Color3.fromRGB(170,0,255) or Color3.fromRGB(40,40,40) end
+ u();b.MouseButton1Click:Connect(function() UIState[it[2]]=not UIState[it[2]];u() end)
 end
+
+local map={HD="Head",TR="UpperTorso",LG="LeftFoot"}
+local function mk(txt,x)
+ local b=Instance.new("TextButton",f)
+ b.Position=UDim2.new(0,x,0,245)
+ b.Size=UDim2.new(0,32,0,20)
+ b.Text=txt
+ b.BackgroundColor3=Color3.new(0,0,0)
+ b.TextColor3=Color3.fromRGB(170,0,255)
+ b.BorderColor3=Color3.fromRGB(170,0,255)
+ Instance.new("UICorner",b).CornerRadius=UDim.new(0,8)
+ b.MouseButton1Click:Connect(function() UIState.AimPart=map[txt] end)
+end
+mk("HD",34)
+mk("TR",69)
+mk("LG",104)
+
+local kb=Instance.new("TextButton",f);kb.Position=UDim2.new(0,12,0,210);kb.Size=UDim2.new(0,140,0,24);kb.Text="KB: Q";kb.BackgroundColor3=Color3.new(0,0,0);kb.TextColor3=Color3.fromRGB(170,0,255);kb.BorderColor3=Color3.fromRGB(170,0,255);Instance.new("UICorner",kb).CornerRadius=UDim.new(0,8)
+local bind=false
+kb.MouseButton1Click:Connect(function() bind=true;kb.Text="Press..." end)
+UIS.InputBegan:Connect(function(i,g)
+ if g then return end
+ if bind then
+  bind=false
+  if i.KeyCode~=Enum.KeyCode.Unknown then UIState.AimKey=i.KeyCode;kb.Text="KB: "..i.KeyCode.Name
+  elseif tostring(i.UserInputType):find("MouseButton") then UIState.AimKey=i.UserInputType;kb.Text="KB: "..i.UserInputType.Name end
+ elseif i.KeyCode==UIState.AimKey or i.UserInputType==UIState.AimKey then UIState._hold=true end
+end)
+UIS.InputEnded:Connect(function(i)
+ if i.KeyCode==UIState.AimKey or i.UserInputType==UIState.AimKey then UIState._hold=false end
+end)
+local fl=Instance.new("TextLabel",f);fl.Position=UDim2.new(0,12,0,285);fl.Size=UDim2.new(0,40,0,20);fl.Text="FOV";fl.BackgroundTransparency=1;fl.TextColor3=Color3.fromRGB(170,0,255)
+local s=Instance.new("TextBox",f);s.BackgroundColor3=Color3.new(0,0,0);s.TextColor3=Color3.fromRGB(170,0,255);s.BorderColor3=Color3.fromRGB(170,0,255);Instance.new("UICorner",s).CornerRadius=UDim.new(0,8);s.Position=UDim2.new(0,60,0,285);s.Size=UDim2.new(0,90,0,20);s.Text=tostring(UIState.FOV)
+s.FocusLost:Connect(function() local n=tonumber(s.Text);if n then UIState.FOV=math.clamp(n,20,500) end end)
+
+RS.RenderStepped:Connect(function()
+ if not(UIState.AIM and UIState._hold) then return end
+ local best,bp=nil,nil
+ for _,p in ipairs(Players:GetPlayers()) do
+  if p~=LP and p.Character then
+   local part=p.Character:FindFirstChild(UIState.AimPart) or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("Head")
+   local hum=p.Character:FindFirstChildOfClass("Humanoid")
+   if part and hum and hum.Health>0 then
+    if UIState.WALL then
+      local rp=RaycastParams.new()
+      rp.FilterType=Enum.RaycastFilterType.Blacklist
+      rp.FilterDescendantsInstances={LP.Character}
+      local hit=workspace:Raycast(Cam.CFrame.Position,part.Position-Cam.CFrame.Position,rp)
+      if hit and not hit.Instance:IsDescendantOf(p.Character) then
+        part=nil
+      end
+    end
+    if part then
+    local pos,on=Cam:WorldToViewportPoint(part.Position)
+    if on then
+      local d=((Vector2.new(pos.X,pos.Y)-UIS:GetMouseLocation())).Magnitude
+      if d<UIState.FOV and (not best or d<best) then best=d;bp=part end
+    end
+    end
+   end
+  end
+ end
+ if bp then Cam.CFrame=CFrame.new(Cam.CFrame.Position,bp.Position) end
+end)
+
 local tog=Instance.new("TextButton",pg)
-tog.Size=UDim2.new(0,70,0,18);tog.Position=UDim2.new(0,90,0.4,162)
-tog.Text="˅";tog.BackgroundColor3=Color3.new(0,0,0);tog.BorderColor3=Color3.fromRGB(170,0,255)
-local uc=Instance.new("UICorner",tog);uc.CornerRadius=UDim.new(1,0)
-local open=true
-tog.MouseButton1Click:Connect(function() open=not open;f.Visible=open;tog.Text=open and "˅" or "˄" end)
-local UIS=game:GetService("UserInputService")
+tog.Size=UDim2.new(0,70,0,18)
+tog.Position=UDim2.new(0,f.Position.X.Offset+50,f.Position.Y.Scale,f.Position.Y.Offset+317)
+tog.Text="˅"
+tog.BackgroundColor3=Color3.new(0,0,0)
+tog.TextColor3=Color3.fromRGB(170,0,255)
+tog.BorderColor3=Color3.fromRGB(170,0,255)
+Instance.new("UICorner",tog).CornerRadius=UDim.new(1,0)
+local opened=true
+tog.MouseButton1Click:Connect(function() opened=not opened;f.Visible=opened;tog.Text=opened and "˅" or "˄" end)
 local drag,dstart,start
 f.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then drag=true;dstart=i.Position;start=f.Position end end)
 UIS.InputChanged:Connect(function(i)
- if drag and i.UserInputType==Enum.UserInputType.MouseMovement then
-  local d=i.Position-dstart
-  f.Position=UDim2.new(start.X.Scale,start.X.Offset+d.X,start.Y.Scale,start.Y.Offset+d.Y)
-  tog.Position=UDim2.new(f.Position.X.Scale,f.Position.X.Offset+50,f.Position.Y.Scale,f.Position.Y.Offset+162)
- end
-end)
+if drag and i.UserInputType==Enum.UserInputType.MouseMovement then
+local d=i.Position-dstart
+f.Position=UDim2.new(start.X.Scale,start.X.Offset+d.X,start.Y.Scale,start.Y.Offset+d.Y)
+tog.Position=UDim2.new(f.Position.X.Scale,f.Position.X.Offset+50,f.Position.Y.Scale,f.Position.Y.Offset+317)
+end end)
 UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then drag=false end end)
+
 end
 
 -- ESP Script (R6/R15) by nln
