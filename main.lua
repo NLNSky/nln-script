@@ -112,37 +112,6 @@ local MAX_DISTANCE = 300
 
 local ESP = {}
 
-local function ensureBoxes(char)
-    if not char or not UIState.ESW then return end
-    for _,part in ipairs(char:GetChildren()) do
-        if part:IsA("BasePart") and not part:FindFirstChild("ESPBoxTag") then
-            local ok=false
-            local n=part.Name
-            if n=="Head" or n=="Torso" or n=="UpperTorso" or n=="LowerTorso"
-            or n:find("Arm") or n:find("Leg") or n=="LeftHand" or n=="RightHand"
-            or n=="LeftFoot" or n=="RightFoot" then
-                ok=true
-            end
-            if ok then
-                local tag=Instance.new("BoolValue")
-                tag.Name="ESPBoxTag"
-                tag.Parent=part
-                local box=Instance.new("BoxHandleAdornment")
-                box.Name="ESPBox"
-                box.Adornee=part
-                box.AlwaysOnTop=true
-                box.ZIndex=10
-                box.Color3=ESPColor
-                box.Transparency=0.35
-                box.Size=part.Size+Vector3.new(0.05,0.05,0.05)
-                box.Visible=true
-                box.Parent=char
-            end
-        end
-    end
-end
-
-
 local function getCharacterRoot(char)
     return char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
 end
@@ -268,30 +237,4 @@ for _,p in ipairs(Players:GetPlayers()) do
 end
 
 Players.PlayerAdded:Connect(setup)
-
-task.spawn(function()
-    while true do
-        task.wait(30)
-        if UIState.ESW then
-            for _,plr in ipairs(Players:GetPlayers()) do
-                if plr~=LocalPlayer then
-                    local char=plr.Character
-                    if char then
-                        ensureBoxes(char)
-                    end
-                end
-            end
-        end
-    end
-end)
-
-Players.PlayerAdded:Connect(function(plr)
-    plr.CharacterAdded:Connect(function(char)
-        if UIState.ESW then
-            task.wait(0.2)
-            ensureBoxes(char)
-        end
-    end)
-end)
-
 
